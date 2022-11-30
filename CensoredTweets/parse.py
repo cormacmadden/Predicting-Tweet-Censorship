@@ -9,9 +9,8 @@ import zipfile
 
 def main():
     fileDir = os.path.dirname(__file__)
-    rawDataDir2018 = os.path.join(fileDir, '../CensoredTweets/input/')
     input_folder = os.path.join(fileDir, '../CensoredTweets/input/')
-    output_folder = os.path.join(fileDir, '../CensoredTweets/output/')
+    output_folder = os.path.join(fileDir, '../CensoredTweets/outputRegular/')
     write_folder = ''
     TIMELINE = False
     HYDRATED = False

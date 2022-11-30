@@ -4,7 +4,7 @@ import json
 import bz2
 
 mp.freeze_support()
-parallel = True # should the parsing run in parallel
+parallel = False # should the parsing run in parallel
 processes = 20 # how many processes?
 fileDir = os.path.dirname(__file__)
 rawDataDir2018 = os.path.join(fileDir, '../Data/2018')
@@ -17,7 +17,7 @@ paths = [
 save_path = os.path.join(fileDir, '../CensoredTweets/input/')
 
 def parse_withheld(file):
-    writer_withheld_tweets = open(save_path + "withheldtweets.json", 'a')
+    writer_withheld_tweets = open(save_path + "regulartweets.json", 'a')
 
     print(file)
     bz_file = bz2.BZ2File(file)
@@ -42,13 +42,13 @@ def parse_withheld(file):
             created_at = json_obj['created_at']
 
             # check tweet
-            if ('withheld_in_countries' in json_obj) and (json_obj['lang'] == "en"):
+            if (('withheld_in_countries' in json_obj) == False) and (json_obj['lang'] == "en"):
                 json_obj['linked'] = 'no' # no retweet or quote
                 writer_withheld_tweets.write(json.dumps(json_obj) + "\n")
             
             try:
                 json_obj['quoted_status']
-                if('withheld_in_countries' in json_obj['quoted_status']) and (json_obj['lang'] == "en"):
+                if(('withheld_in_countries' in json_obj['quoted_status']) == False) and (json_obj['lang'] == "en"):
                     json_obj['linked'] = 'quoted'
                     writer_withheld_tweets.write(json.dumps(json_obj) + "\n")
             except:
@@ -93,12 +93,13 @@ if __name__ == '__main__':
 
         print(path)
         print(len(files))
-
+    
         if(parallel):
             pool.map(parse_withheld, [file for file in files])
         else:
-            for file in files:
-                parse_withheld(file)
+
+            for i in range(0,2000):
+                parse_withheld(files[i])
 
     if(parallel):
         pool.close()
