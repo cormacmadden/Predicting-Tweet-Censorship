@@ -5,30 +5,23 @@ import multiprocessing as mp
 import json
 import bz2
 
-'''
-EDIT HERE
-'''
 parallel = False # should the parsing run in parallel
 processes = 20 # how many processes?
-main_path = '?'
+fileDir = os.path.dirname(__file__)
+rawDataDir2018 = os.path.join(fileDir, '../Data/2018')
 
 paths = [
-    "U:\Machine_Learning_Module\Group Project\Data\\2018"
-    
-    #"%s/2019" % (main_path),
+    rawDataDir2018
+    #add other year folders here if needed.
 ]
 
-save_path = 'U:\Machine_Learning_Module\Group Project\CensoredTweets\input'
-'''
-DONE EDITING
-'''
+save_path = os.path.join(fileDir, '../Data/2018')
+'U:\Machine_Learning_Module\Group Project\CensoredTweets\input'
 
 def parse_withheld(file):
     date = '-'.join(file.split('/')[-5:-2])
 
     writer_withheld_tweets = open(save_path + date + "_withheldtweets.json", 'a')
-    #writer_withheld_users = open(save_path + date + "_withheldusers.json", 'a')
-    #writer_withheld_messages = open(save_path + date + "_withheldumessages.json", 'a')
 
     # print(file)
     bz_file = bz2.BZ2File(file)
@@ -49,7 +42,6 @@ def parse_withheld(file):
         except:
             continue
 
-        #
         if('created_at' in json_obj):
             created_at = json_obj['created_at']
 
@@ -58,22 +50,12 @@ def parse_withheld(file):
                 json_obj['linked'] = 'no' # no retweet or quote
                 writer_withheld_tweets.write(json.dumps(json_obj) + "\n")
 
-            # check user
-            #if ('withheld_in_countries' in json_obj['user']):
-            #    json_obj['linked'] = 'no'
-            #    writer_withheld_users.write(json.dumps(json_obj) + "\n")
-
             try:
                 # handle retweet
                 json_obj['retweeted_status']
                 if('withheld_in_countries' in json_obj['retweeted_status']):
                     json_obj['linked'] = 'retweeted'
                     writer_withheld_tweets.write(json.dumps(json_obj) + "\n")
-
-                #if('withheld_in_countries' in json_obj['retweeted_status']['user']):
-                #    json_obj['linked'] = 'retweeted'
-                #    writer_withheld_users.write(json.dumps(json_obj) + "\n")
-
             except:
                 # handle quote
                 try:
@@ -81,11 +63,6 @@ def parse_withheld(file):
                     if('withheld_in_countries' in json_obj['quoted_status']):
                         json_obj['linked'] = 'quoted'
                         writer_withheld_tweets.write(json.dumps(json_obj) + "\n")
-
-                #    if('withheld_in_countries' in json_obj['quoted_status']['user']):
-                #        json_obj['linked'] = 'quoted'
-                #        writer_withheld_users.write(json.dumps(json_obj) + "\n")
-
                 except:
                     continue
 
@@ -96,15 +73,11 @@ def parse_withheld(file):
                 json_obj['withheld_in_countries']
                 # store the approximate time of the withheld message, which is the creation time of the previous tweet
                 json_obj['approx_time'] = created_at
-                #writer_withheld_messages.write(json.dumps(json_obj) + "\n")
 
             except:
                 continue
 
-    #writer_withheld_messages.close()
     writer_withheld_tweets.close()
-    #writer_withheld_users.close()
-
 
 new_paths = []
 for path in paths:
