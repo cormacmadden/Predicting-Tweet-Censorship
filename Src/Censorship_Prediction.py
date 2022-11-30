@@ -1,9 +1,11 @@
+from tensorflow import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 import os
 import json
 import gzip
+import googleSentimentAnalysis
+import pandas as pd
 
 fileDir = os.path.dirname(__file__)
 mypath = os.path.join(fileDir, '../Data/20210823')
@@ -22,11 +24,10 @@ for n in range(0, len(tweets)):
 
 
 
-'''
-tf.keras.preprocessing.text.text_to_word_sequence(
-    input_text,
-    filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
-    lower=True,
-    split=' '
-)
-'''
+
+censored_tweets = pd.read_csv('tweet_text.csv')
+print(censored_tweets.head()) # print first 5 rows
+
+for tweet in censored_tweets:
+    tweet_entities_sentiment = googleSentimentAnalysis.sample_analyze_entity_sentiment(tweet)
+    #Add to censored tweets dataframe
