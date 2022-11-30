@@ -35,13 +35,14 @@ def create_views(output_path):
     #     # os.mkdir(main_folder + folder + view_folder)
     main_folder = "./" + output_path.split('/')[1] + "/"
     folder = output_path.split('/')[2] + "/"
-
+    ''''''
     # DIRECTED RETWEET GRAPH
     df = pd.read_csv(main_folder + folder + 'network_retweet.csv', dtype= {'author_id': str, 'original_author_id': str})
     created = df.groupby(by = ["author_id", "original_author_id"]).size().reset_index()
     created.columns = ["source", "target", "weight"]
     created.to_csv(main_folder + folder + "view_retweet_graph.csv", index = False)
 
+    
     # USER STATS
     df = pd.read_csv(main_folder + folder + 'tweet_metadata.csv', dtype= {'author_id': str, 'id': str}, usecols = ['id', 'author_id'])
     created = df.groupby(by = ["author_id"]).size().reset_index()
@@ -95,7 +96,7 @@ def create_views(output_path):
 
     df.loc[df['tweet_type'] == 'reply', 'tweet_type'] = 'tweet'
     df.loc[df['tweet_type'] == 'quote', 'tweet_type'] = 'tweet'
-
+    
     try:
         dele = pd.read_csv(main_folder + folder + 'deleted_tweets.csv', dtype= {'author_id': str, 'id': str}, usecols = ['id', 'author_id', 'deletion_time'])
         dele = dele.rename({'deletion_time': 'created_at'}, axis = 1)

@@ -7,12 +7,11 @@ import argparse
 import pandas as pd
 import zipfile
 
-'''
-TODO: HANDLE BIG FILES BY WRITING TO NEW FOLDER
-'''
 def main():
-    input_folder = 'U:\Machine_Learning_Module\Group Project\CensoredTweets/input/'
-    output_folder = 'U:\Machine_Learning_Module\Group Project\CensoredTweets/output/'
+    fileDir = os.path.dirname(__file__)
+    rawDataDir2018 = os.path.join(fileDir, '../CensoredTweets/input/')
+    input_folder = os.path.join(fileDir, '../CensoredTweets/input/')
+    output_folder = os.path.join(fileDir, '../CensoredTweets/output/')
     write_folder = ''
     TIMELINE = False
     HYDRATED = False
