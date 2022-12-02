@@ -15,3 +15,4 @@ print(censored_tweets.head()) # print first 5 rows
 for tweet in censored_tweets.text:
     print(tweet)
     #Add to censored tweets dataframe
+
