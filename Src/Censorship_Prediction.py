@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import string
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
@@ -14,6 +15,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import roc_curve
+from wordcloud import WordCloud, STOPWORDS
+
 def run():
     fileDir = os.path.dirname(__file__)
     mypath = os.path.join(fileDir)
@@ -30,11 +33,17 @@ def run():
     uncensored_df.insert(loc=3, column='y', value=1)
     uncensored_df = uncensored_df.drop(['id','lang'],axis=1)
 
-    #merge and shufflem
+    #merge and shuffle
     df = pd.concat([censored_df, uncensored_df], ignore_index=True, sort=False, )
     df = shuffle(df)
     df_x=df["text"]
     df_y=df["y"]
+
+    plot_cloud(' '.join(censored_df["text"]))
+
+    plot_cloud(' '.join(uncensored_df["text"]))
+
+    plot_cloud(' '.join(df["text"]))
 
     x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=4)
 
@@ -90,6 +99,15 @@ def run():
     #best_min_diff(x_train,y_train)
     #log_knn_dummy_ROC(x_train_fit,y_train,1,20,0)
     
+
+def plot_cloud(words):
+    wordcloud = WordCloud(width= 3000, height = 2000, random_state=1, colormap='Pastel1', collocations=False, stopwords = STOPWORDS)
+    wordcloud.generate(words)   
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.margins(x=0, y=0)
+    plt.show()
+
 
 def knn_best_k(X,x_test_fit,y,y_test,title):
     fig = plt.figure()
