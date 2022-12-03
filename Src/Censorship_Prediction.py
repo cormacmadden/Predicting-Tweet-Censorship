@@ -41,33 +41,19 @@ def run():
 
     plot_cloud(' '.join(censored_df["text"]))
 
-    plot_cloud(' '.join(uncensored_df["text"]))
-
-    plot_cloud(' '.join(df["text"]))
-
     x_train, x_test, y_train, y_test = train_test_split(df_x, df_y, test_size=0.2, random_state=4)
 
-    cv = CountVectorizer(min_df=2, max_df=90, lowercase='True', encoding="utf-8",ngram_range=(1, 2))
+    cv = CountVectorizer(min_df=2, max_df=90, lowercase='True', encoding="utf-8",ngram_range=(1, 1), stop_words = ["https"])
 
-    #tfidV = TfidfVectorizer(min_df = 1, stop_words='english', lowercase='True')
+    tfidV = TfidfVectorizer(min_df=2, max_df=90, lowercase='True', encoding="utf-8",ngram_range=(1, 1), stop_words = ["https"])
 
     x_train_fit=cv.fit_transform(x_train)
     x_test_fit=cv.transform(x_test)
     test = x_train_fit.sum(axis=1)
-    '''
-    featureNames = zip(cv.get_feature_names(), x_train_fit.sum(axis=1))
-    #mostCommonWords = sorted(featureNames, key=lambda x:x[1],reverse = True)
-    features = cv.vocabulary_
-    #print(features)
-    mostCommonWords = sorted(features.items(), key=lambda x:x[1],reverse = True)
-    converted_dict = dict(mostCommonWords)
-    #print(converted_dict)
-    y_train=y_train.astype('int')
-    y_test=y_test.astype('int')
-    '''
-    log_reg = LogisticRegression()
-    mnb = MultinomialNB()
-    kNN = KNeighborsClassifier(n_neighbors=1500)
+
+    log_reg = LogisticRegression(C=5)
+    mnb = MultinomialNB(alpha=2)
+    kNN = KNeighborsClassifier(n_neighbors=20)
     log_reg.fit(x_train_fit,y_train)
     kNN.fit(x_train_fit,y_train)
     mnb.fit(x_train_fit,y_train)
@@ -76,29 +62,13 @@ def run():
     print_top10(cv, log_reg, class_labels)
     #important_features(cv,mnb,n=20)
 
-    mnbscores = log_reg.predict_proba(x_test_fit)
-    kNNscores = kNN.predict_proba(x_test_fit)
-    fpr, tpr, _ = roc_curve(y_test, mnbscores[:, 1])
-    fpr1, tpr1, _ = roc_curve(y_test, kNNscores[:, 1])
-
     print("Accuracy: ", log_reg.score(x_test_fit, y_test))
+    print("Accuracy: ", kNN.score(x_test_fit, y_test))
+    print("Accuracy: ", mnb.score(x_test_fit, y_test))
 
-
-    fig = plt.figure()
-    plt.plot(fpr, tpr)
-    plt.plot(fpr1, tpr1)
-
-
-    plt.title('ROC Curves')
-    plt.xlabel('False positive rate'); plt.ylabel('True positive rate')
-    plt.legend(['Logistic Regression','MultinomialNB'])
-    plt.show(block=True)
-
-    mnb_best_k(x_train_fit,x_test_fit,y_train,y_test, "Dataset 1")
-    #reg_best_c(x_train_fit,y_train,"Logistic Regression (Censorship Model): Best C Value")
-    #best_min_diff(x_train,y_train)
-    #log_knn_dummy_ROC(x_train_fit,y_train,1,20,0)
-    
+    mnb_best_k(x_train_fit,y_train)
+    best_min_diff(x_train,y_train)
+    log_knn_dummy_ROC(x_train_fit,y_train,5,20,1)
 
 def plot_cloud(words):
     wordcloud = WordCloud(width= 3000, height = 2000, random_state=1, colormap='Pastel1', collocations=False, stopwords = STOPWORDS)
@@ -107,7 +77,6 @@ def plot_cloud(words):
     plt.axis('off')
     plt.margins(x=0, y=0)
     plt.show()
-
 
 def knn_best_k(X,x_test_fit,y,y_test,title):
     fig = plt.figure()
@@ -126,11 +95,11 @@ def knn_best_k(X,x_test_fit,y,y_test,title):
     plt.title('kNN (Censorship Model): Best k Value')
     plt.show()
 
-def mnb_best_k(X,x_test_fit,y,y_test,title):
+def mnb_best_k(X,y):
     fig = plt.figure()
     avg_accuracy=[]
     std_err=[]
-    alphas = np.array(range(0,10,1))
+    alphas = np.array(range(0,15,1))
     for a in alphas:
         mnb = MultinomialNB(alpha=a)
         scores = cross_val_score(mnb, X, y, scoring="accuracy")
@@ -142,7 +111,6 @@ def mnb_best_k(X,x_test_fit,y,y_test,title):
     plt.ylabel('Accuracy')
     plt.title('MultinomialNB: Best alpha Value')
     plt.show()
-
 
 def reg_best_c(X, y, title):
     fig = plt.figure()
@@ -166,37 +134,47 @@ def reg_best_c(X, y, title):
     plt.show()
     return
 
-def log_knn_dummy_ROC(X, y, c, k, poly):
+def log_knn_dummy_ROC(X, y, c, k,a):
     fig = plt.figure()
-    
-    # c)
-    
-    y_pred_log_reg =[]; y_pred_knn = []
-    x_train, x_test, y_train, y_test = train_test_split(X, y)
 
-    log_reg = LogisticRegression(C=c)
-    knn = KNeighborsClassifier(n_neighbors=k)
+    y_pred_log_reg =[]; y_pred_knn = []
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+    log_reg = LogisticRegression(C=c, solver = 'sag', max_iter=100)
+    knn = KNeighborsClassifier(n_neighbors=k, algorithm='kd_tree')
+    mnb = MultinomialNB(alpha=a)
     dummy = DummyClassifier(strategy="most_frequent")
 
     log_reg.fit(x_train, y_train)
     knn.fit(x_train, y_train)
     dummy.fit(x_train, y_train)
+    mnb.fit(x_train, y_train)
 
-    y_pred_log_reg = log_reg.predict(X)
+    y_pred_log_reg = log_reg.predict(x_test)
     y_pred_knn = knn.predict(x_test)
     y_pred_dummy = dummy.predict(x_test)
+    y_pred_mnb = mnb.predict(x_test)
 
-    log_mat = confusion_matrix(y, y_pred_log_reg)
+    log_mat = confusion_matrix(y_test, y_pred_log_reg)
+    mnb_mat = confusion_matrix(y_test, y_pred_mnb)
     knn_mat = confusion_matrix(y_test, y_pred_knn)
     dummy_mat = confusion_matrix(y_test, y_pred_dummy)
+
+    print(classification_report(y_test, y_pred_log_reg, target_names=["Not-Censored", "Censored"]))
+    print(classification_report(y_test, y_pred_mnb, target_names=["Not-Censored", "Censored"]))
+    print(classification_report(y_test, y_pred_knn, target_names=["Not-Censored", "Censored"]))
+    print(classification_report(y_test, y_pred_dummy, zero_division=0, target_names=["Not-Censored", "Censored"]))
     
     print("LogReg \n", log_mat)
+    print("MultiNB \n", mnb_mat)
     print("Knn \n", knn_mat)
     print("Dummy \n", dummy_mat)
 
-    # d)
-    
     scores = log_reg.predict_proba(x_test)
+    fpr, tpr, _ = roc_curve(y_test, scores[:, 1])
+    plt.plot(fpr, tpr)
+
+    scores = mnb.predict_proba(x_test)
     fpr, tpr, _ = roc_curve(y_test, scores[:, 1])
     plt.plot(fpr, tpr)
 
@@ -209,7 +187,7 @@ def log_knn_dummy_ROC(X, y, c, k, poly):
     plt.plot(fpr, tpr)
 
     plt.title('ROC Curves')
-    plt.legend(['Logistic Regression', 'KNN', 'Dummy'])
+    plt.legend(['Logistic Regression','multi Nominal NB', 'K Nearest Neighbours', 'Dummy Classifier'])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.show()
@@ -237,6 +215,7 @@ def best_min_diff(X,y):
 def print_top10(vectorizer, clf, class_labels):
     """Prints features with the highest coefficient values, per class"""
     feature_names = vectorizer.get_feature_names()
+    plot_cloud(' '.join(feature_names[:]))
     for class_label in enumerate(class_labels):
         top10 = np.argsort(clf.coef_[0][:])[-10:]
         print("%s: %s" % (class_label,
@@ -262,4 +241,13 @@ def important_features(vectorizer,classifier,n=20):
 if __name__ == '__main__':
     run()
 
+    '''
+    featureNames = zip(cv.get_feature_names(), x_train_fit.sum(axis=1))
+    #mostCommonWords = sorted(featureNames, key=lambda x:x[1],reverse = True)
+    features = cv.vocabulary_
+    #print(features)
+    mostCommonWords = sorted(features.items(), key=lambda x:x[1],reverse = True)
+    converted_dict = dict(mostCommonWords)
+    #print(converted_dict)
+    '''
     
