@@ -179,7 +179,7 @@ here as it results in a high accuracy, low standard deviation and
 doesn't unnecessarily over-fit the data.
 
 <p align="center">
-  <img width="500" src="https://raw.githubusercontent.com/cormacmadden/Twitter_Censorship_Prediction/main/Figures/Figure_1.png">
+  <img width="500" src="https://raw.githubusercontent.com/cormacmadden/Twitter_Censorship_Prediction/main/Figures/Figure_3.png">
 </p>
 
 Alpha is Multi-nominal NB's smoothing parameter. We iterated alpha from
